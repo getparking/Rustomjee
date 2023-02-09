@@ -1,4 +1,4 @@
-#include <UIPEthernet.h>
+#include <EthernetENC.h>
 #include <SPI.h>
 #include <PubSubClient.h>
 
@@ -65,7 +65,7 @@ void reconnect()
 {
   if (client.connect("arduinoClientSuper214", mqttUser, mqttPassword))
   {
-    //Serial.println("connected");
+    Serial.println("041");
     client.subscribe(post);
     publishMessage(fetch, "P2 display connected", true);
   }
