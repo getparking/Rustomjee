@@ -22,7 +22,8 @@ IPAddress subnet (255,255,255,0);
 byte mac[] = {  0x14, 0xED, 0xBA, 0xFE, 0xFE, 0x00 };
 unsigned long lastMsg = 0;
 const char* post = "P2/";
-const char*  fetch = "dmd/";
+const char*  fetch = "dmd_P2/";
+const char* connect = "reconnect/";
 
 
 void callback(char* topic, byte* message, unsigned int length);
@@ -67,7 +68,7 @@ void reconnect()
   {
     Serial.println("041");
     client.subscribe(post);
-    publishMessage(fetch, "P2 display connected", true);
+    publishMessage(connect, "P2 display connected", true);
   }
   else
   {
