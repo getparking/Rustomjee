@@ -5,10 +5,9 @@
 int previous = 0;
 int sensorValue = 3;
 int voltage;
-float Shy;
-int count = 0;
+int count = 15;
 
-const char* mqtt_server = "192.168.1.165"; 
+const char* mqtt_server = "192.168.1.211"; 
 const int mqtt_port = 1883; 
 const char* mqttUser = "getparking";
 const char* mqttPassword = "playtmbiz";
@@ -16,19 +15,27 @@ const char* mqttPassword = "playtmbiz";
 EthernetClient ethClient;
 PubSubClient client(ethClient);
 
-IPAddress ip(192,168,1,222);
+IPAddress ip(192,168,1,219);
 IPAddress gwip(192,168,1,1);
 IPAddress subnet (255,255,255,0);
 
-byte mac[] = {0x22, 0xED, 0xBA, 0xFE, 0xFE, 0x00 };
+byte mac[] = {0x19, 0xED, 0xBA, 0xFE, 0xFE, 0x00 };
 
 unsigned long lastMsg = 0;
 const char*pub = "loop/"; 
-const char*reconnected = "reconnected/";
-const char* sub = "data_D/";
+const char*post = "reconnect/";
+//const char*sub = "data/";
+const char*publish2 = "counting/";
+const char* willtopic = "death/";
+const char* acknowledge = "display_P2/";
+
+const char* clientname = "P2Display";
+const char* willMsg = "P2disdead";
+String reconnectMsg = "ConnectedP2";
 
 String Car;
 String stri;
+long lastReconnectAttempt = 0;
 
 void callback(char* topic, byte* message, unsigned int length);
 void callback(char* topic, byte* payload, unsigned int length)
@@ -38,6 +45,10 @@ void callback(char* topic, byte* payload, unsigned int length)
     Serial.print((char)payload[i]);
     Car += (char)payload[i];
   }
+  stri = String(Car);
+  Serial.println(stri);
+  publishMessage(publish2,"A-"+stri,true);
+  count = 0;
 }
 
 void setup()
@@ -47,20 +58,19 @@ void setup()
   Ethernet.begin(mac,ip,gwip,subnet);
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
+  client.setKeepAlive(60);
+  delay(1500);
   pinMode(sensorValue, INPUT_PULLUP);
+  long lastReconnectAttempt = 0;
 }
-void reconnect()
-{
-  if (client.connect("arduinoClientSup222", mqttUser, mqttPassword))  {
-    publishMessage(sub,"Connected loop D", true);
-    client.subscribe(reconnected);
+boolean reconnect() {
+  if (client.connect(clientname,mqttUser, mqttPassword, willtopic,0,false,willMsg,true)) {
+    // Once connected, publish an announcement...
+    publishMessage(post,reconnectMsg,true);
+    // ... and resubscribe
+    client.subscribe(acknowledge);
   }
-  else
-  {
-    Serial.print("failed, rc=");
-    Serial.print(client.state());
-    delay(100);
-  }
+  return client.connected();
 }
 
 void publishMessage(const char* topic, String payload , boolean retained)
@@ -70,24 +80,22 @@ void publishMessage(const char* topic, String payload , boolean retained)
 }
 void loop()
 {
-  Ethernet.maintain();
-  while (!client.connected())
-  {
-    Serial.println("Connecting to MQTT...");
-    reconnect();
-  }
-  client.loop();
-  Shy = analogRead(sensorValue);
-  Serial.println("shy");
-
-
-  
-  Serial.println(Shy);
+  if (!client.connected()) {
+    long now = millis();
+    if (now - lastReconnectAttempt > 5000) {
+      lastReconnectAttempt = now;
+      // Attempt to reconnect
+      if (reconnect()) {
+        lastReconnectAttempt = 0;
+      }
+    }
+  } else {
+    // Client connected
+    client.loop();
   voltage = digitalRead(sensorValue);
   if ( voltage != LOW)
   {
-    Serial.println("voltage is :");
-    Serial.println(voltage);
+    //Serial.println(voltage);
   }
   else
   {
@@ -104,10 +112,10 @@ void loop()
       Serial.print("count is ");
       Serial.println(count);
       stri = String(count);
-      publishMessage(pub, "en1", true);
-      publishMessage(pub, "ex2", true);
+      publishMessage(pub, "en2", true);
+      publishMessage(pub, "ex1", true);
     }
   }
   previous = voltage;
-  delay(1000);
+}
 }
