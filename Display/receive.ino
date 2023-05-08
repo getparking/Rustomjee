@@ -57,6 +57,7 @@ void setup()
   Serial.begin(9600);
   while (!Serial) delay(1);
   Ethernet.begin(mac,ip,gwip,subnet);
+  client.keepAlive(60);
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
   //Serial.print(transmit);
