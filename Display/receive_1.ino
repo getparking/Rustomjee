@@ -85,6 +85,6 @@ void loop()
 
 void publishMessage(const char* topic, String payload , boolean retained)
 {
-  if (client.publish(topic, payload.c_str(), true))
+  if (client.publish(topic, payload.c_str(), false))
   Serial.println("Message publised [" + String(topic) + "]: " + payload);
 }
