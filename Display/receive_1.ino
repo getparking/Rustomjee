@@ -47,7 +47,7 @@ void setup()
  // Ethernet.begin(mac);
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
-  client.setKeepAlive(30);
+  client.setKeepAlive(60);
   delay(1500);
   long lastReconnectAttempt = 0;
 }
